@@ -1,6 +1,6 @@
 // ui.js
 // ─────────────────────────────────────────────────────────────
-// Project panel DOM management + HUD + intro overlay.
+// Project panel DOM management + HUD.
 // ─────────────────────────────────────────────────────────────
 
 import { projects } from "./projects.js";
@@ -14,19 +14,10 @@ const panelImg     = document.getElementById("panel-img");
 const hudX         = document.getElementById("hud-x");
 const hudZ         = document.getElementById("hud-z");
 const hudNode      = document.getElementById("hud-node");
-const intro        = document.getElementById("intro");
 
 // ── State ─────────────────────────────────────────────────────
 let _activeIndex   = -1;
 let _debounceTimer = null;
-let _introVisible  = true;
-
-// ── Intro overlay ─────────────────────────────────────────────
-export function dismissIntro() {
-  if (!_introVisible) return;
-  _introVisible = false;
-  intro.classList.add("dismissed");
-}
 
 // ── Panel show / hide ─────────────────────────────────────────
 export function showPanel(index) {
