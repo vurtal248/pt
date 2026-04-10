@@ -8,15 +8,15 @@ import * as THREE from "https://unpkg.com/three@0.128.0/build/three.module.js";
 import { scene } from "./scene.js";
 
 // ── Tuning constants ─────────────────────────────────────────
-const ACCEL         = 7.0;   // units/s²
-const MAX_SPEED     = 6.0;   // units/s
-const FRICTION      = 0.88;  // velocity multiplier per frame (damping)
-const STEER_RATE    = 2.2;   // rad/s at full speed
-const WORLD_BOUND   = 13.5;  // ±world boundary (car turns back at edge)
+const ACCEL = 12.0;   // units/s²
+const MAX_SPEED = 13.0;   // units/s
+const FRICTION = 0.88;  // velocity multiplier per frame (damping)
+const STEER_RATE = 2.2;   // rad/s at full speed
+const WORLD_BOUND = 13.5;  // ±world boundary (car turns back at edge)
 
 // ── State ─────────────────────────────────────────────────────
-let velocity  = 0;          // signed scalar (forward+)
-let heading   = 0;          // radians (Y-axis rotation)
+let velocity = 0;          // signed scalar (forward+)
+let heading = 0;          // radians (Y-axis rotation)
 const carPosition = new THREE.Vector3(0, 0, 0);
 
 // ── Mesh construction ─────────────────────────────────────────
@@ -25,7 +25,7 @@ const carGroup = new THREE.Group();
 // Chassis
 const chassisMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.5, metalness: 0.7 });
 const chassisGeo = new THREE.BoxGeometry(0.52, 0.16, 0.96);
-const chassis    = new THREE.Mesh(chassisGeo, chassisMat);
+const chassis = new THREE.Mesh(chassisGeo, chassisMat);
 chassis.position.y = 0.12;
 chassis.castShadow = true;
 chassis.receiveShadow = true;
@@ -34,7 +34,7 @@ carGroup.add(chassis);
 // Cabin
 const cabinMat = new THREE.MeshStandardMaterial({ color: 0x0d0d22, roughness: 0.3, metalness: 0.8 });
 const cabinGeo = new THREE.BoxGeometry(0.40, 0.14, 0.46);
-const cabin    = new THREE.Mesh(cabinGeo, cabinMat);
+const cabin = new THREE.Mesh(cabinGeo, cabinMat);
 cabin.position.set(0, 0.27, -0.05);
 cabin.castShadow = true;
 carGroup.add(cabin);
@@ -42,7 +42,7 @@ carGroup.add(cabin);
 // Windscreen accent (thin amber strip)
 const windMat = new THREE.MeshStandardMaterial({ color: 0xf5a623, emissive: 0xf5a623, emissiveIntensity: 0.6, roughness: 0.2, metalness: 0.9 });
 const windGeo = new THREE.BoxGeometry(0.38, 0.03, 0.03);
-const wind    = new THREE.Mesh(windGeo, windMat);
+const wind = new THREE.Mesh(windGeo, windMat);
 wind.position.set(0, 0.28, 0.19);
 carGroup.add(wind);
 
@@ -50,7 +50,7 @@ carGroup.add(wind);
 const hlMat = new THREE.MeshStandardMaterial({ color: 0xffe080, emissive: 0xffe080, emissiveIntensity: 2.2, roughness: 0.1, metalness: 0.5 });
 [[-0.15, 0], [0.15, 0]].forEach(([ox]) => {
   const geo = new THREE.BoxGeometry(0.07, 0.04, 0.03);
-  const m   = new THREE.Mesh(geo, hlMat);
+  const m = new THREE.Mesh(geo, hlMat);
   m.position.set(ox, 0.12, 0.49);
   carGroup.add(m);
 });
@@ -59,14 +59,14 @@ const hlMat = new THREE.MeshStandardMaterial({ color: 0xffe080, emissive: 0xffe0
 const tlMat = new THREE.MeshStandardMaterial({ color: 0xff2020, emissive: 0xff2020, emissiveIntensity: 1.5, roughness: 0.1 });
 [[-0.15, 0], [0.15, 0]].forEach(([ox]) => {
   const geo = new THREE.BoxGeometry(0.07, 0.04, 0.03);
-  const m   = new THREE.Mesh(geo, tlMat);
+  const m = new THREE.Mesh(geo, tlMat);
   m.position.set(ox, 0.12, -0.49);
   carGroup.add(m);
 });
 
 // Wheels — 4 cylinders
 const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8, metalness: 0.4 });
-const rimMat   = new THREE.MeshStandardMaterial({ color: 0x888899, roughness: 0.4, metalness: 0.9 });
+const rimMat = new THREE.MeshStandardMaterial({ color: 0x888899, roughness: 0.4, metalness: 0.9 });
 
 function makeWheel(x, z) {
   const g = new THREE.Group();
@@ -85,9 +85,9 @@ function makeWheel(x, z) {
 
 const wheels = [
   makeWheel(-0.3, 0.33),
-  makeWheel( 0.3, 0.33),
-  makeWheel(-0.3,-0.33),
-  makeWheel( 0.3,-0.33),
+  makeWheel(0.3, 0.33),
+  makeWheel(-0.3, -0.33),
+  makeWheel(0.3, -0.33),
 ];
 wheels.forEach((w) => carGroup.add(w));
 
@@ -107,11 +107,11 @@ function updateCar(keys, delta) {
   const speedFactor = Math.abs(velocity) / MAX_SPEED;
   const steerAmount = STEER_RATE * speedFactor * delta;
 
-  if (keys["ArrowLeft"]  || keys["KeyA"]) heading += steerAmount;
+  if (keys["ArrowLeft"] || keys["KeyA"]) heading += steerAmount;
   if (keys["ArrowRight"] || keys["KeyD"]) heading -= steerAmount;
 
   // ── Acceleration ─────────────────────────────────────────
-  if (keys["ArrowUp"]   || keys["KeyW"]) velocity += ACCEL * delta;
+  if (keys["ArrowUp"] || keys["KeyW"]) velocity += ACCEL * delta;
   if (keys["ArrowDown"] || keys["KeyS"]) velocity -= ACCEL * delta;
 
   // ── Friction / coast ─────────────────────────────────────
