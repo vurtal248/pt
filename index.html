@@ -251,111 +251,7 @@
       pointer-events: none;
     }
 
-    /* ── Intro overlay ────────────────────────────────────── */
-    #intro {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(ellipse at 50% 60%, #0a1428 0%, #030710 70%);
-      transition: opacity 0.7s ease, visibility 0.7s ease;
-    }
 
-    #intro.dismissed {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    .intro-grid {
-      /* SVG grid lines as background */
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(var(--border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border) 1px, transparent 1px);
-      background-size: 48px 48px;
-      opacity: 0.4;
-    }
-
-    .intro-content {
-      position: relative;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .intro-eyebrow {
-      font-size: 10px;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      color: var(--amber);
-      opacity: 0.8;
-    }
-
-    .intro-title {
-      font-family: var(--sans);
-      font-size: clamp(36px, 6vw, 72px);
-      font-weight: 800;
-      color: var(--text-hi);
-      letter-spacing: -0.03em;
-      line-height: 1.0;
-    }
-
-    .intro-title span {
-      color: var(--amber);
-    }
-
-    .intro-sub {
-      font-size: 12px;
-      color: var(--text-mid);
-      letter-spacing: 0.05em;
-      max-width: 360px;
-      line-height: 1.7;
-    }
-
-    .intro-prompt {
-      margin-top: 10px;
-      font-size: 11px;
-      color: var(--text-lo);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      animation: blink 1.4s ease-in-out infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.2; }
-    }
-
-    .intro-nodes {
-      display: flex;
-      gap: 10px;
-      margin-top: 4px;
-    }
-
-    .intro-node-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--amber);
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-
-    .intro-node-dot:nth-child(2) { animation-delay: 0.3s; }
-    .intro-node-dot:nth-child(3) { animation-delay: 0.6s; }
-    .intro-node-dot:nth-child(4) { animation-delay: 0.9s; }
-    .intro-node-dot:nth-child(5) { animation-delay: 1.2s; }
-
-    @keyframes pulse-dot {
-      0%, 100% { transform: scale(1);   opacity: 0.5; }
-      50%       { transform: scale(1.6); opacity: 1.0; }
-    }
 
     /* ── Crosshair reticle — center screen ───────────────── */
     #reticle {
@@ -454,26 +350,7 @@
   <div class="panel-index" id="panel-index" aria-hidden="true">00</div>
 </div>
 
-<!-- Intro overlay -->
-<div id="intro" role="dialog" aria-modal="true" aria-label="Portfolio introduction">
-  <div class="intro-grid" aria-hidden="true"></div>
-  <div class="intro-content">
-    <p class="intro-eyebrow">Interactive Portfolio</p>
-    <h1 class="intro-title">Navigate<br/>the <span>Grid</span></h1>
-    <p class="intro-sub">
-      Drive between project nodes on a live 3D map.<br/>
-      Arrive at a node to reveal the project.
-    </p>
-    <div class="intro-nodes" aria-hidden="true">
-      <div class="intro-node-dot"></div>
-      <div class="intro-node-dot"></div>
-      <div class="intro-node-dot"></div>
-      <div class="intro-node-dot"></div>
-      <div class="intro-node-dot"></div>
-    </div>
-    <p class="intro-prompt">Press any key to begin</p>
-  </div>
-</div>
+
 
 <!-- ES module entry -->
 <script type="module" src="./main.js"></script>
