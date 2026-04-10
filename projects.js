@@ -18,7 +18,7 @@ export const projects = [
     title: "B-Stats",
     tag: "JS, HTML, CSS, BASKETBALL",
     desc: "A basketball stats website that tracks player stats and is able to predict the players future stats based off of their past stats.",
-    image: "./Assets/BStats.png",
+    image: "./Assets/Images/BStats.png",
     position: [6, -2],
   },
 ];
