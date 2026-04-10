@@ -7,7 +7,7 @@ import * as THREE from "https://unpkg.com/three@0.128.0/build/three.module.js";
 import { scene, camera, renderer } from "./scene.js";
 import { carPosition, updateCar } from "./car.js";
 import { buildNodes, getNearestNode, pulseNode, updateRipples } from "./nodes.js";
-import { showPanel, hidePanel, updateHUD, dismissIntro } from "./ui.js";
+import { showPanel, hidePanel, updateHUD } from "./ui.js";
 
 // ── Build world ───────────────────────────────────────────────
 buildNodes();
@@ -15,10 +15,7 @@ buildNodes();
 // ── Input ─────────────────────────────────────────────────────
 const keys = {};
 
-window.addEventListener("keydown", (e) => {
-  keys[e.code] = true;
-  dismissIntro();          // first keypress closes intro
-});
+window.addEventListener("keydown", (e) => { keys[e.code] = true; });
 window.addEventListener("keyup",   (e) => { keys[e.code] = false; });
 
 // ── Camera follow state ───────────────────────────────────────
