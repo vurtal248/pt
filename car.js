@@ -11,7 +11,7 @@ import { scene } from "./scene.js";
 const ACCEL = 80.0;   // units/s²
 const MAX_SPEED = 80.0;   // units/s
 const FRICTION = 0.88;  // velocity multiplier per frame (damping)
-const STEER_RATE = 50;   // rad/s at full speed
+const STEER_RATE = 25;   // rad/s at full speed
 const WORLD_BOUND = 13.5;  // ±world boundary (car turns back at edge)
 
 // ── State ─────────────────────────────────────────────────────
