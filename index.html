@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio — Navigate the Grid</title>
+  <meta name="description" content="Interactive 3D portfolio. Drive between project nodes on a bird's-eye neon grid. Keyboard controls." />
+
+  <!-- Fonts: DM Mono (code/HUD) + Cabinet Grotesk (panel body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & tokens ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #030710;
+      --surface:     #080f1e;
+      --surface-hi:  #0d1a30;
+      --border:      #162540;
+      --amber:       #f5a623;
+      --amber-dim:   #c27d14;
+      --cyan:        #00e5ff;
+      --red:         #ff3b55;
+      --text-hi:     #e8eef8;
+      --text-mid:    #7a90b0;
+      --text-lo:     #3a4f6a;
+      --panel-w:     340px;
+      --panel-gap:   24px;
+      --radius:      6px;
+      --mono:        'DM Mono', 'Courier New', monospace;
+      --sans:        'Syne', system-ui, sans-serif;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      overflow: hidden;
+      font-family: var(--mono);
+      color: var(--text-hi);
+    }
+
+    /* ── Canvas host ─────────────────────────────────────── */
+    #canvas-host {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* ── HUD — top-left coordinates ──────────────────────── */
+    #hud {
+      position: fixed;
+      top: var(--panel-gap);
+      left: var(--panel-gap);
+      z-index: 10;
+      display: grid;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .hud-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--text-mid);
+    }
+
+    .hud-label {
+      color: var(--text-lo);
+      text-transform: uppercase;
+    }
+
+    .hud-value {
+      color: var(--amber);
+      min-width: 56px;
+    }
+
+    .hud-divider {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, transparent, var(--border), transparent);
+      margin: 0 2px;
+    }
+
+    #hud-node-row {
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--text-lo);
+      letter-spacing: 0.08em;
+    }
+
+    #hud-node {
+      color: var(--cyan);
+    }
+
+    /* ── Controls legend — bottom-left ───────────────────── */
+    #controls {
+      position: fixed;
+      bottom: var(--panel-gap);
+      left: var(--panel-gap);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      pointer-events: none;
+    }
+
+    .ctrl-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      color: var(--text-lo);
+      letter-spacing: 0.09em;
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 20px;
+      padding: 0 5px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-size: 9px;
+      color: var(--text-mid);
+      letter-spacing: 0;
+    }
+
+    /* ── Project panel — right side ──────────────────────── */
+    #panel {
+      position: fixed;
+      top: 50%;
+      right: var(--panel-gap);
+      transform: translateY(-50%) translateX(calc(var(--panel-w) + 40px));
+      z-index: 20;
+      width: var(--panel-w);
+
+      background: linear-gradient(160deg, rgba(8,15,30,0.96) 0%, rgba(5,10,20,0.98) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+
+      padding: 0;
+      overflow: hidden;
+
+      /* Transition: slide in from the right */
+      transition:
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity   0.35s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #panel.visible {
+      transform: translateY(-50%) translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #panel.hiding {
+      transform: translateY(-50%) translateX(calc(var(--panel-w) + 40px));
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Amber accent bar at top */
+    #panel::before {
+      content: '';
+      display: block;
+      height: 2px;
+      background: linear-gradient(90deg, var(--amber) 0%, transparent 100%);
+    }
+
+    .panel-inner {
+      padding: 20px 22px 24px;
+    }
+
+    #panel-tag {
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 10px;
+      opacity: 0.85;
+    }
+
+    #panel-title {
+      font-family: var(--sans);
+      font-size: clamp(18px, 2vw, 22px);
+      font-weight: 700;
+      color: var(--text-hi);
+      line-height: 1.15;
+      margin-bottom: 14px;
+      letter-spacing: -0.01em;
+    }
+
+    #panel-img {
+      display: none;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+    }
+
+    #panel-desc {
+      font-size: 12.5px;
+      line-height: 1.7;
+      color: var(--text-mid);
+      letter-spacing: 0.01em;
+    }
+
+    /* Scanline texture overlay on panel */
+    .panel-scanlines {
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .panel-inner { position: relative; z-index: 2; }
+
+    /* Node index watermark */
+    .panel-index {
+      position: absolute;
+      bottom: 14px;
+      right: 18px;
+      font-size: 52px;
+      font-family: var(--sans);
+      font-weight: 800;
+      color: var(--border);
+      line-height: 1;
+      letter-spacing: -0.03em;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ── Intro overlay ────────────────────────────────────── */
+    #intro {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 50% 60%, #0a1428 0%, #030710 70%);
+      transition: opacity 0.7s ease, visibility 0.7s ease;
+    }
+
+    #intro.dismissed {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .intro-grid {
+      /* SVG grid lines as background */
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.4;
+    }
+
+    .intro-content {
+      position: relative;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .intro-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--amber);
+      opacity: 0.8;
+    }
+
+    .intro-title {
+      font-family: var(--sans);
+      font-size: clamp(36px, 6vw, 72px);
+      font-weight: 800;
+      color: var(--text-hi);
+      letter-spacing: -0.03em;
+      line-height: 1.0;
+    }
+
+    .intro-title span {
+      color: var(--amber);
+    }
+
+    .intro-sub {
+      font-size: 12px;
+      color: var(--text-mid);
+      letter-spacing: 0.05em;
+      max-width: 360px;
+      line-height: 1.7;
+    }
+
+    .intro-prompt {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--text-lo);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      animation: blink 1.4s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.2; }
+    }
+
+    .intro-nodes {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .intro-node-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    .intro-node-dot:nth-child(2) { animation-delay: 0.3s; }
+    .intro-node-dot:nth-child(3) { animation-delay: 0.6s; }
+    .intro-node-dot:nth-child(4) { animation-delay: 0.9s; }
+    .intro-node-dot:nth-child(5) { animation-delay: 1.2s; }
+
+    @keyframes pulse-dot {
+      0%, 100% { transform: scale(1);   opacity: 0.5; }
+      50%       { transform: scale(1.6); opacity: 1.0; }
+    }
+
+    /* ── Crosshair reticle — center screen ───────────────── */
+    #reticle {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      pointer-events: none;
+      opacity: 0.18;
+    }
+
+    #reticle svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* ── Vignette ─────────────────────────────────────────── */
+    #vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(
+        ellipse at 50% 50%,
+        transparent 40%,
+        rgba(3, 7, 16, 0.7) 100%
+      );
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- Three.js render target -->
+<div id="canvas-host"></div>
+
+<!-- Vignette overlay -->
+<div id="vignette" aria-hidden="true"></div>
+
+<!-- Crosshair reticle -->
+<div id="reticle" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="1.5" fill="#f5a623"/>
+    <line x1="12" y1="4" x2="12" y2="8"  stroke="#f5a623" stroke-width="1"/>
+    <line x1="12" y1="16" x2="12" y2="20" stroke="#f5a623" stroke-width="1"/>
+    <line x1="4"  y1="12" x2="8"  y2="12" stroke="#f5a623" stroke-width="1"/>
+    <line x1="16" y1="12" x2="20" y2="12" stroke="#f5a623" stroke-width="1"/>
+  </svg>
+</div>
+
+<!-- HUD — position readout -->
+<div id="hud" role="status" aria-label="Car coordinates">
+  <div class="hud-row">
+    <span class="hud-label">X</span>
+    <span class="hud-value" id="hud-x">0.00</span>
+    <div class="hud-divider"></div>
+    <span class="hud-label">Z</span>
+    <span class="hud-value" id="hud-z">0.00</span>
+  </div>
+  <div class="hud-row" id="hud-node-row">
+    <span class="hud-label">NODE&nbsp;</span>
+    <span id="hud-node">—</span>
+  </div>
+</div>
+
+<!-- Controls legend -->
+<div id="controls" role="note" aria-label="Keyboard controls">
+  <div class="ctrl-row">
+    <span class="key">W</span><span class="key">↑</span>
+    <span>Accelerate</span>
+  </div>
+  <div class="ctrl-row">
+    <span class="key">S</span><span class="key">↓</span>
+    <span>Reverse</span>
+  </div>
+  <div class="ctrl-row">
+    <span class="key">A</span><span class="key">←</span>
+    <span>Steer left</span>
+  </div>
+  <div class="ctrl-row">
+    <span class="key">D</span><span class="key">→</span>
+    <span>Steer right</span>
+  </div>
+</div>
+
+<!-- Project detail panel -->
+<div id="panel" role="complementary" aria-label="Project details" aria-live="polite">
+  <div class="panel-scanlines" aria-hidden="true"></div>
+  <div class="panel-inner">
+    <div id="panel-tag"></div>
+    <h2 id="panel-title"></h2>
+    <img id="panel-img" alt="Project screenshot" />
+    <p id="panel-desc"></p>
+  </div>
+  <div class="panel-index" id="panel-index" aria-hidden="true">00</div>
+</div>
+
+<!-- Intro overlay -->
+<div id="intro" role="dialog" aria-modal="true" aria-label="Portfolio introduction">
+  <div class="intro-grid" aria-hidden="true"></div>
+  <div class="intro-content">
+    <p class="intro-eyebrow">Interactive Portfolio</p>
+    <h1 class="intro-title">Navigate<br/>the <span>Grid</span></h1>
+    <p class="intro-sub">
+      Drive between project nodes on a live 3D map.<br/>
+      Arrive at a node to reveal the project.
+    </p>
+    <div class="intro-nodes" aria-hidden="true">
+      <div class="intro-node-dot"></div>
+      <div class="intro-node-dot"></div>
+      <div class="intro-node-dot"></div>
+      <div class="intro-node-dot"></div>
+      <div class="intro-node-dot"></div>
+    </div>
+    <p class="intro-prompt">Press any key to begin</p>
+  </div>
+</div>
+
+<!-- ES module entry -->
+<script type="module" src="./main.js"></script>
+
+<!-- Panel index update — bridged here since panel-index is purely cosmetic -->
+<script type="module">
+  // Keep the big watermark index in sync with the active panel
+  import { projects } from "./projects.js";
+
+  const panel      = document.getElementById("panel");
+  const indexEl    = document.getElementById("panel-index");
+  const titleEl    = document.getElementById("panel-title");
+
+  // MutationObserver watches panel title changes to update watermark
+  new MutationObserver(() => {
+    const title = titleEl.textContent;
+    const idx   = projects.findIndex(p => p.title === title);
+    indexEl.textContent = idx >= 0 ? String(idx).padStart(2, "0") : "00";
+  }).observe(titleEl, { childList: true, characterData: true, subtree: true });
+</script>
+
+</body>
+</html>
