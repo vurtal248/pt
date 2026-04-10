@@ -8,10 +8,10 @@ import * as THREE from "https://unpkg.com/three@0.128.0/build/three.module.js";
 import { scene } from "./scene.js";
 
 // ── Tuning constants ─────────────────────────────────────────
-const ACCEL = 120.0;   // units/s²
-const MAX_SPEED = 120.0;   // units/s
+const ACCEL = 80.0;   // units/s²
+const MAX_SPEED = 80.0;   // units/s
 const FRICTION = 0.88;  // velocity multiplier per frame (damping)
-const STEER_RATE = 100;   // rad/s at full speed
+const STEER_RATE = 50;   // rad/s at full speed
 const WORLD_BOUND = 13.5;  // ±world boundary (car turns back at edge)
 
 // ── State ─────────────────────────────────────────────────────
