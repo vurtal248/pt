@@ -18,6 +18,34 @@ const keys = {};
 window.addEventListener("keydown", (e) => { keys[e.code] = true; });
 window.addEventListener("keyup",   (e) => { keys[e.code] = false; });
 
+// ── Virtual joystick (touch) ──────────────────────────────────
+// Maps each button element to the key code it simulates.
+// Using touchstart/touchend so holding the button registers as held.
+const joyMap = {
+  "jbtn-fwd":   "ArrowUp",
+  "jbtn-rev":   "ArrowDown",
+  "jbtn-left":  "ArrowLeft",
+  "jbtn-right": "ArrowRight",
+};
+
+Object.entries(joyMap).forEach(([id, code]) => {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+
+  const press   = (e) => { e.preventDefault(); keys[code] = true;  btn.classList.add("pressed"); };
+  const release = (e) => { e.preventDefault(); keys[code] = false; btn.classList.remove("pressed"); };
+
+  // Touch events — primary mobile path
+  btn.addEventListener("touchstart",  press,   { passive: false });
+  btn.addEventListener("touchend",    release, { passive: false });
+  btn.addEventListener("touchcancel", release, { passive: false });
+
+  // Mouse fallback (useful in DevTools mobile simulation)
+  btn.addEventListener("mousedown", press);
+  btn.addEventListener("mouseup",   release);
+  btn.addEventListener("mouseleave", release);
+});
+
 // ── Camera follow state ───────────────────────────────────────
 // Camera lerps toward a target offset above the car
 const CAM_OFFSET   = new THREE.Vector3(0, 14, 10);
