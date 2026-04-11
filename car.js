@@ -22,7 +22,7 @@ const carPosition = new THREE.Vector3(0, 0, 0);
 // ── Joystick input (written by main.js) ───────────────────────
 // When active = true, updateCar uses direct heading+magnitude mode
 // instead of the Arrow-key arcade steering mode.
-export const joyInput = { active: false, nx: 0, ny: 0, mag: 0 };
+const joyInput = { active: false, nx: 0, ny: 0, mag: 0 };
 
 // ── Mesh construction ─────────────────────────────────────────
 const carGroup = new THREE.Group();
