@@ -5,7 +5,7 @@
 
 import * as THREE from "https://unpkg.com/three@0.128.0/build/three.module.js";
 import { scene, camera, renderer } from "./scene.js";
-import { carPosition, updateCar } from "./car.js";
+import { carPosition, updateCar, joyInput } from "./car.js";
 import { buildNodes, getNearestNode, pulseNode, updateRipples } from "./nodes.js";
 import { showPanel, hidePanel, updateHUD } from "./ui.js";
 
@@ -41,14 +41,16 @@ window.addEventListener("keyup",   (e) => { keys[e.code] = false; });
     // knob is centred via translate(-50%,-50%); additional offset stacked on top
     knob.style.transform = `translate(calc(-50% + ${px}px), calc(-50% + ${py}px))`;
 
-    // Map to directional booleans with deadzone
-    keys["ArrowUp"]    = ny < -DEADZONE;
-    keys["ArrowDown"]  = ny >  DEADZONE;
-    keys["ArrowLeft"]  = nx < -DEADZONE;
-    keys["ArrowRight"] = nx >  DEADZONE;
+    const mag = Math.hypot(nx, ny);
+
+    // Send high-res vector data to car.js instead of discrete Arrow keys
+    joyInput.nx = nx;
+    joyInput.ny = ny;
+    joyInput.mag = mag;
+    joyInput.active = true;
 
     // Glow base ring when actively steering
-    base.classList.toggle("moving", Math.hypot(nx, ny) > DEADZONE);
+    base.classList.toggle("moving", mag > DEADZONE);
   }
 
   function onStart(e) {
@@ -81,8 +83,13 @@ window.addEventListener("keyup",   (e) => { keys[e.code] = false; });
     knob.classList.remove("active");
     // Spring-reset — CSS transition on #joy-knob animates this
     knob.style.transform = "translate(-50%, -50%)";
-    // Clear all directional keys
-    keys["ArrowUp"] = keys["ArrowDown"] = keys["ArrowLeft"] = keys["ArrowRight"] = false;
+    
+    // Clear analog input
+    joyInput.active = false;
+    joyInput.nx = 0;
+    joyInput.ny = 0;
+    joyInput.mag = 0;
+    
     base.classList.remove("moving");
   }
 
