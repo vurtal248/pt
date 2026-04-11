@@ -19,6 +19,11 @@ let velocity = 0;          // signed scalar (forward+)
 let heading = 0;          // radians (Y-axis rotation)
 const carPosition = new THREE.Vector3(0, 0, 0);
 
+// ── Joystick input (written by main.js) ───────────────────────
+// When active = true, updateCar uses direct heading+magnitude mode
+// instead of the Arrow-key arcade steering mode.
+export const joyInput = { active: false, nx: 0, ny: 0, mag: 0 };
+
 // ── Mesh construction ─────────────────────────────────────────
 const carGroup = new THREE.Group();
 
@@ -102,17 +107,34 @@ scene.add(carGroup);
 const _moveDir = new THREE.Vector3();
 
 function updateCar(keys, delta) {
-  // ── Steering ─────────────────────────────────────────────
-  // Scale steer by speed — no spinning in place
-  const speedFactor = Math.abs(velocity) / MAX_SPEED;
-  const steerAmount = STEER_RATE * speedFactor * delta;
+  if (joyInput.active && joyInput.mag > 0.08) {
+    // ── Joystick: direct-direction mode ──────────────────────
+    // Camera sits at carZ+10, so screen-up = world -Z = heading PI.
+    // atan2(joyX, joyY) maps joystick screen coords to world heading:
+    //   stick up  (joyY=-1) → atan2(0,-1) = PI  = -Z ✓
+    //   stick right(joyX=1) → atan2(1, 0) = PI/2 = +X ✓
+    const targetHeading = Math.atan2(joyInput.nx, joyInput.ny);
 
-  if (keys["ArrowLeft"] || keys["KeyA"]) heading += steerAmount;
-  if (keys["ArrowRight"] || keys["KeyD"]) heading -= steerAmount;
+    // Shortest-path heading lerp — snappy but not jarring
+    let diff = targetHeading - heading;
+    while (diff > Math.PI) diff -= 2 * Math.PI;
+    while (diff < -Math.PI) diff += 2 * Math.PI;
+    heading += diff * Math.min(1, 10 * delta);
 
-  // ── Acceleration ─────────────────────────────────────────
-  if (keys["ArrowUp"] || keys["KeyW"]) velocity += ACCEL * delta;
-  if (keys["ArrowDown"] || keys["KeyS"]) velocity -= ACCEL * delta;
+    // Speed proportional to stick displacement
+    velocity += ACCEL * joyInput.mag * delta;
+
+  } else if (!joyInput.active) {
+    // ── Keyboard: original tank-turn arcade steering ─────────
+    const speedFactor = Math.abs(velocity) / MAX_SPEED;
+    const steerAmount = STEER_RATE * speedFactor * delta;
+
+    if (keys["ArrowLeft"] || keys["KeyA"]) heading += steerAmount;
+    if (keys["ArrowRight"] || keys["KeyD"]) heading -= steerAmount;
+
+    if (keys["ArrowUp"] || keys["KeyW"]) velocity += ACCEL * delta;
+    if (keys["ArrowDown"] || keys["KeyS"]) velocity -= ACCEL * delta;
+  }
 
   // ── Friction / coast ─────────────────────────────────────
   velocity *= Math.pow(FRICTION, delta * 60);   // framerate-independent
@@ -141,4 +163,4 @@ function updateCar(keys, delta) {
   carGroup.rotation.y = heading;
 }
 
-export { carGroup, carPosition, updateCar };
+export { carGroup, carPosition, updateCar, joyInput };
