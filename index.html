@@ -284,63 +284,105 @@
 
     /* ── Virtual joystick (mobile only) ──────────────────── */
     #joystick {
-      display: none; /* shown via media query */
+      display: none; /* overridden by media query below */
       position: fixed;
-      bottom: 28px;
+      bottom: 36px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 30;
-      /* 3×3 grid: top row = fwd, middle = left/center/right, bottom = rev */
-      display: grid;
-      grid-template-columns: 52px 52px 52px;
-      grid-template-rows: 52px 52px;
-      gap: 6px;
       touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     /* Hide joystick on desktop */
     @media (hover: hover) and (pointer: fine) {
       #joystick { display: none !important; }
-      #controls { display: flex; } /* already flex */
+      #controls { display: flex; }
     }
 
     /* Show joystick on touch / coarse-pointer devices */
     @media (hover: none), (pointer: coarse) {
-      #joystick { display: grid; }
-      #controls { display: none; } /* hide keyboard legend */
+      #joystick { display: block; }
+      #controls { display: none; }
     }
 
-    .jbtn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(8, 15, 30, 0.82);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--amber);
-      font-size: 18px;
-      user-select: none;
-      -webkit-user-select: none;
-      cursor: pointer;
-      /* Prevent ghost clicks / text selection */
-      touch-action: none;
-      transition: background 0.08s ease, border-color 0.08s ease;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+    /* Joystick base — outer ring */
+    #joy-base {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      /* Layered glass: subtle radial gradient + border */
+      background: radial-gradient(
+        circle at 42% 38%,
+        rgba(22, 37, 64, 0.72) 0%,
+        rgba(8, 15, 30, 0.88) 100%
+      );
+      border: 1.5px solid rgba(0, 229, 255, 0.18);
+      box-shadow:
+        0 0 0 1px rgba(245, 166, 35, 0.06),
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 8px 32px rgba(0,0,0,0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: relative;
+      /* Tick marks at cardinal points */
     }
 
-    .jbtn:active, .jbtn.pressed {
-      background: rgba(245, 166, 35, 0.18);
+    /* Cardinal direction ticks */
+    #joy-base::before {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      border-radius: 50%;
+      border: 1px dashed rgba(245, 166, 35, 0.12);
+    }
+
+    /* Draggable thumb knob */
+    #joy-knob {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle at 36% 32%,
+        rgba(245, 166, 35, 0.35) 0%,
+        rgba(245, 166, 35, 0.12) 60%,
+        rgba(8, 15, 30, 0.6) 100%
+      );
+      border: 1.5px solid rgba(245, 166, 35, 0.55);
+      box-shadow:
+        0 0 14px rgba(245, 166, 35, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      position: absolute;
+      /* Centre in base */
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      /* Smooth spring-back when finger lifts */
+      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  box-shadow 0.12s ease;
+      will-change: transform;
+      cursor: grab;
+    }
+
+    /* Active / pressed glow */
+    #joy-knob.active {
+      transition: none; /* no lag while dragging */
+      box-shadow:
+        0 0 24px rgba(245, 166, 35, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
       border-color: var(--amber);
     }
 
-    /* Grid placement */
-    /* Row 1: [empty] [fwd] [empty] */
-    /* Row 2: [left]  [rev] [right] */
-    #jbtn-fwd   { grid-column: 2; grid-row: 1; }
-    #jbtn-left  { grid-column: 1; grid-row: 2; }
-    #jbtn-rev   { grid-column: 2; grid-row: 2; }
-    #jbtn-right { grid-column: 3; grid-row: 2; }
+    /* Directional glow ring that brightens on movement */
+    #joy-base.moving {
+      border-color: rgba(245, 166, 35, 0.40);
+      box-shadow:
+        0 0 0 1px rgba(245, 166, 35, 0.14),
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 8px 32px rgba(0,0,0,0.5),
+        0 0 28px rgba(245, 166, 35, 0.14);
+    }
 
     /* ── Mobile panel: slide up from bottom ──────────────── */
     @media (hover: none), (pointer: coarse) {
@@ -372,7 +414,7 @@
 
       /* Joystick must float above panel when panel is visible */
       #joystick {
-        bottom: 8px;
+        bottom: 24px;
         transition: bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1);
       }
 
@@ -447,11 +489,10 @@
 </div>
 
 <!-- Virtual joystick (touch devices) -->
-<div id="joystick" aria-label="Virtual driving controls" role="group">
-  <button class="jbtn" id="jbtn-fwd"  aria-label="Accelerate">&#9650;</button>
-  <button class="jbtn" id="jbtn-left" aria-label="Steer left">&#9664;</button>
-  <button class="jbtn" id="jbtn-rev"  aria-label="Reverse">&#9660;</button>
-  <button class="jbtn" id="jbtn-right" aria-label="Steer right">&#9654;</button>
+<div id="joystick" aria-label="Virtual driving joystick" role="group">
+  <div id="joy-base" aria-hidden="true">
+    <div id="joy-knob"></div>
+  </div>
 </div>
 
 <!-- Project detail panel -->
