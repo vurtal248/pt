@@ -30,6 +30,7 @@ export function showPanel(index) {
     _populate(index);
     panel.classList.add("visible");
     panel.classList.remove("hiding");
+    document.body.classList.add("panel-open");
   }, 120);
 }
 
@@ -40,6 +41,7 @@ export function hidePanel() {
     _activeIndex = -1;
     panel.classList.remove("visible");
     panel.classList.add("hiding");
+    document.body.classList.remove("panel-open");
     hudNode.textContent = "—";
   }, 120);
 }
