@@ -16,17 +16,15 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:          #030710;
-      --surface:     #080f1e;
-      --surface-hi:  #0d1a30;
-      --border:      #162540;
-      --amber:       #f5a623;
-      --amber-dim:   #c27d14;
-      --cyan:        #00e5ff;
-      --red:         #ff3b55;
-      --text-hi:     #e8eef8;
-      --text-mid:    #7a90b0;
-      --text-lo:     #3a4f6a;
+      --bg:          #060606;
+      --surface:     #0f0f0f;
+      --surface-hi:  #181818;
+      --border:      #2a2a2a;
+      --accent:      #e8e8e8;
+      --accent-dim:  #888888;
+      --text-hi:     #f0f0f0;
+      --text-mid:    #888888;
+      --text-lo:     #3a3a3a;
       --panel-w:     340px;
       --panel-gap:   24px;
       --radius:      6px;
@@ -75,7 +73,7 @@
     }
 
     .hud-value {
-      color: var(--amber);
+      color: var(--accent);
       min-width: 56px;
     }
 
@@ -94,7 +92,7 @@
     }
 
     #hud-node {
-      color: var(--cyan);
+      color: var(--accent);
     }
 
     /* ── Controls legend — bottom-left ───────────────────── */
@@ -142,11 +140,11 @@
       z-index: 20;
       width: var(--panel-w);
 
-      background: linear-gradient(160deg, rgba(8,15,30,0.96) 0%, rgba(5,10,20,0.98) 100%);
+      background: linear-gradient(160deg, rgba(10,10,10,0.97) 0%, rgba(4,4,4,0.99) 100%);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      backdrop-filter: blur(20px) saturate(140%);
-      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      backdrop-filter: blur(20px) saturate(0%);
+      -webkit-backdrop-filter: blur(20px) saturate(0%);
 
       padding: 0;
       overflow: hidden;
@@ -171,12 +169,12 @@
       pointer-events: none;
     }
 
-    /* Amber accent bar at top */
+    /* White accent bar at top */
     #panel::before {
       content: '';
       display: block;
-      height: 2px;
-      background: linear-gradient(90deg, var(--amber) 0%, transparent 100%);
+      height: 1px;
+      background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
     }
 
     .panel-inner {
@@ -187,7 +185,7 @@
       font-size: 9.5px;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: var(--amber);
+      color: var(--accent-dim);
       margin-bottom: 10px;
       opacity: 0.85;
     }
@@ -315,14 +313,14 @@
       /* Layered glass: subtle radial gradient + border */
       background: radial-gradient(
         circle at 42% 38%,
-        rgba(22, 37, 64, 0.72) 0%,
-        rgba(8, 15, 30, 0.88) 100%
+        rgba(28, 28, 28, 0.72) 0%,
+        rgba(8, 8, 8, 0.88) 100%
       );
-      border: 1.5px solid rgba(0, 229, 255, 0.18);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
       box-shadow:
-        0 0 0 1px rgba(245, 166, 35, 0.06),
-        inset 0 1px 0 rgba(255,255,255,0.04),
-        0 8px 32px rgba(0,0,0,0.5);
+        0 0 0 1px rgba(255, 255, 255, 0.04),
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 8px 32px rgba(0,0,0,0.7);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       position: relative;
@@ -335,7 +333,7 @@
       position: absolute;
       inset: 8px;
       border-radius: 50%;
-      border: 1px dashed rgba(245, 166, 35, 0.12);
+      border: 1px dashed rgba(255, 255, 255, 0.10);
     }
 
     /* Draggable thumb knob */
@@ -345,14 +343,14 @@
       border-radius: 50%;
       background: radial-gradient(
         circle at 36% 32%,
-        rgba(245, 166, 35, 0.35) 0%,
-        rgba(245, 166, 35, 0.12) 60%,
-        rgba(8, 15, 30, 0.6) 100%
+        rgba(255, 255, 255, 0.18) 0%,
+        rgba(200, 200, 200, 0.06) 60%,
+        rgba(8, 8, 8, 0.6) 100%
       );
-      border: 1.5px solid rgba(245, 166, 35, 0.55);
+      border: 1.5px solid rgba(255, 255, 255, 0.40);
       box-shadow:
-        0 0 14px rgba(245, 166, 35, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        0 0 14px rgba(255, 255, 255, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
       position: absolute;
       /* Centre in base */
       top: 50%;
@@ -369,19 +367,19 @@
     #joy-knob.active {
       transition: none; /* no lag while dragging */
       box-shadow:
-        0 0 24px rgba(245, 166, 35, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
-      border-color: var(--amber);
+        0 0 24px rgba(255, 255, 255, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      border-color: var(--accent);
     }
 
     /* Directional glow ring that brightens on movement */
     #joy-base.moving {
-      border-color: rgba(245, 166, 35, 0.40);
+      border-color: rgba(255, 255, 255, 0.25);
       box-shadow:
-        0 0 0 1px rgba(245, 166, 35, 0.14),
+        0 0 0 1px rgba(255, 255, 255, 0.08),
         inset 0 1px 0 rgba(255,255,255,0.04),
-        0 8px 32px rgba(0,0,0,0.5),
-        0 0 28px rgba(245, 166, 35, 0.14);
+        0 8px 32px rgba(0,0,0,0.7),
+        0 0 28px rgba(255, 255, 255, 0.08);
     }
 
     /* ── Mobile panel: slide up from bottom ──────────────── */
@@ -445,11 +443,11 @@
 <!-- Crosshair reticle -->
 <div id="reticle" aria-hidden="true">
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="1.5" fill="#f5a623"/>
-    <line x1="12" y1="4" x2="12" y2="8"  stroke="#f5a623" stroke-width="1"/>
-    <line x1="12" y1="16" x2="12" y2="20" stroke="#f5a623" stroke-width="1"/>
-    <line x1="4"  y1="12" x2="8"  y2="12" stroke="#f5a623" stroke-width="1"/>
-    <line x1="16" y1="12" x2="20" y2="12" stroke="#f5a623" stroke-width="1"/>
+    <circle cx="12" cy="12" r="1.5" fill="#e8e8e8"/>
+    <line x1="12" y1="4" x2="12" y2="8"  stroke="#e8e8e8" stroke-width="1"/>
+    <line x1="12" y1="16" x2="12" y2="20" stroke="#e8e8e8" stroke-width="1"/>
+    <line x1="4"  y1="12" x2="8"  y2="12" stroke="#e8e8e8" stroke-width="1"/>
+    <line x1="16" y1="12" x2="20" y2="12" stroke="#e8e8e8" stroke-width="1"/>
   </svg>
 </div>
 
