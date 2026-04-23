@@ -14,10 +14,10 @@ const NODE_RADIUS    = 0.38;   // ring geometry radius
 const DOT_RADIUS     = 0.12;
 
 // Materials
-const ringMat  = new THREE.MeshStandardMaterial({ color: 0xf5a623, emissive: 0xf5a623, emissiveIntensity: 0.35, roughness: 0.4, metalness: 0.6 });
-const dotMat   = new THREE.MeshStandardMaterial({ color: 0xffd166, emissive: 0xffd166, emissiveIntensity: 0.9,  roughness: 0.3, metalness: 0.4 });
-const edgeMat  = new THREE.LineBasicMaterial({ color: 0x1e3a5f, transparent: true, opacity: 0.55 });
-const rippleMat= new THREE.MeshBasicMaterial({ color: 0xf5a623, transparent: true, opacity: 0.0, side: THREE.DoubleSide });
+const ringMat  = new THREE.MeshStandardMaterial({ color: 0xd0d0d0, emissive: 0xffffff, emissiveIntensity: 0.15, roughness: 0.3, metalness: 0.8 });
+const dotMat   = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.6,  roughness: 0.2, metalness: 0.5 });
+const edgeMat  = new THREE.LineBasicMaterial({ color: 0x303030, transparent: true, opacity: 0.60 });
+const rippleMat= new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.0, side: THREE.DoubleSide });
 
 // Internal state
 let activeNodeIndex = -1;
@@ -53,7 +53,7 @@ function buildNodes() {
 
     // Vertical accent column — thin dim cylinder pointing up
     const colGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.6, 6);
-    const colMat = new THREE.MeshStandardMaterial({ color: 0xf5a623, emissive: 0xf5a623, emissiveIntensity: 0.2, transparent: true, opacity: 0.45 });
+    const colMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.1, transparent: true, opacity: 0.35 });
     const col = new THREE.Mesh(colGeo, colMat);
     col.position.y = 0.3;
     group.add(col);
@@ -94,7 +94,7 @@ function _addLabel(parent, text) {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, 256, 48);
   ctx.font = "bold 22px 'DM Mono', monospace";
-  ctx.fillStyle = "#f5a623";
+  ctx.fillStyle = "#e0e0e0";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(text, 128, 24);
