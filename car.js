@@ -27,8 +27,8 @@ const joyInput = { active: false, nx: 0, ny: 0, mag: 0 };
 // ── Mesh construction ─────────────────────────────────────────
 const carGroup = new THREE.Group();
 
-// Chassis
-const chassisMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.5, metalness: 0.7 });
+// Chassis — matte anthracite
+const chassisMat = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.6, metalness: 0.6 });
 const chassisGeo = new THREE.BoxGeometry(0.52, 0.16, 0.96);
 const chassis = new THREE.Mesh(chassisGeo, chassisMat);
 chassis.position.y = 0.12;
@@ -36,23 +36,23 @@ chassis.castShadow = true;
 chassis.receiveShadow = true;
 carGroup.add(chassis);
 
-// Cabin
-const cabinMat = new THREE.MeshStandardMaterial({ color: 0x0d0d22, roughness: 0.3, metalness: 0.8 });
+// Cabin — near-black
+const cabinMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.25, metalness: 0.85 });
 const cabinGeo = new THREE.BoxGeometry(0.40, 0.14, 0.46);
 const cabin = new THREE.Mesh(cabinGeo, cabinMat);
 cabin.position.set(0, 0.27, -0.05);
 cabin.castShadow = true;
 carGroup.add(cabin);
 
-// Windscreen accent (thin amber strip)
-const windMat = new THREE.MeshStandardMaterial({ color: 0xf5a623, emissive: 0xf5a623, emissiveIntensity: 0.6, roughness: 0.2, metalness: 0.9 });
+// Windscreen accent (thin white strip)
+const windMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.4, roughness: 0.15, metalness: 0.9 });
 const windGeo = new THREE.BoxGeometry(0.38, 0.03, 0.03);
 const wind = new THREE.Mesh(windGeo, windMat);
 wind.position.set(0, 0.28, 0.19);
 carGroup.add(wind);
 
-// Headlights — two small amber emissive boxes
-const hlMat = new THREE.MeshStandardMaterial({ color: 0xffe080, emissive: 0xffe080, emissiveIntensity: 2.2, roughness: 0.1, metalness: 0.5 });
+// Headlights — cool white emissive boxes
+const hlMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2.0, roughness: 0.1, metalness: 0.5 });
 [[-0.15, 0], [0.15, 0]].forEach(([ox]) => {
   const geo = new THREE.BoxGeometry(0.07, 0.04, 0.03);
   const m = new THREE.Mesh(geo, hlMat);
@@ -60,8 +60,8 @@ const hlMat = new THREE.MeshStandardMaterial({ color: 0xffe080, emissive: 0xffe0
   carGroup.add(m);
 });
 
-// Tail lights — red emissive
-const tlMat = new THREE.MeshStandardMaterial({ color: 0xff2020, emissive: 0xff2020, emissiveIntensity: 1.5, roughness: 0.1 });
+// Tail lights — dark grey emissive
+const tlMat = new THREE.MeshStandardMaterial({ color: 0x666666, emissive: 0x888888, emissiveIntensity: 0.8, roughness: 0.2 });
 [[-0.15, 0], [0.15, 0]].forEach(([ox]) => {
   const geo = new THREE.BoxGeometry(0.07, 0.04, 0.03);
   const m = new THREE.Mesh(geo, tlMat);
@@ -70,8 +70,8 @@ const tlMat = new THREE.MeshStandardMaterial({ color: 0xff2020, emissive: 0xff20
 });
 
 // Wheels — 4 cylinders
-const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8, metalness: 0.4 });
-const rimMat = new THREE.MeshStandardMaterial({ color: 0x888899, roughness: 0.4, metalness: 0.9 });
+const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0d0d0d, roughness: 0.85, metalness: 0.3 });
+const rimMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.35, metalness: 0.95 });
 
 function makeWheel(x, z) {
   const g = new THREE.Group();
@@ -96,8 +96,8 @@ const wheels = [
 ];
 wheels.forEach((w) => carGroup.add(w));
 
-// Headlight point light (follows car)
-const headlightLight = new THREE.PointLight(0xffe08060, 1.4, 4.0);
+// Headlight point light — neutral white (follows car)
+const headlightLight = new THREE.PointLight(0xffffff, 0.9, 4.0);
 headlightLight.position.set(0, 0.3, 0.6);
 carGroup.add(headlightLight);
 
