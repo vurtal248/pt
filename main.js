@@ -5,105 +5,48 @@
 
 import * as THREE from "https://unpkg.com/three@0.128.0/build/three.module.js";
 import { scene, camera, renderer } from "./scene.js";
-import { carPosition, updateCar, joyInput } from "./car.js";
-import { buildNodes, getNearestNode, pulseNode, updateRipples } from "./nodes.js";
+import { carPosition, updateCar, initCar, driveTo } from "./car.js";
+import { buildNodes, getNearestNode, pulseNode, updateRipples, nodePositions } from "./nodes.js";
 import { showPanel, hidePanel, updateHUD } from "./ui.js";
 
 // ── Build world ───────────────────────────────────────────────
 buildNodes();
 
-// ── Input ─────────────────────────────────────────────────────
-const keys = {};
+// ── State ─────────────────────────────────────────────────────
+let currentNodeIndex = 0;
+if (nodePositions.length > 0) {
+  initCar(nodePositions[currentNodeIndex]);
+}
 
-window.addEventListener("keydown", (e) => { keys[e.code] = true; });
-window.addEventListener("keyup",   (e) => { keys[e.code] = false; });
+// ── Input & Navigation ────────────────────────────────────────
+function goToNode(direction) {
+  if (nodePositions.length === 0) return;
+  // Calculate new index with wrap-around
+  currentNodeIndex = (currentNodeIndex + direction + nodePositions.length) % nodePositions.length;
+  driveTo(nodePositions[currentNodeIndex]);
+}
 
-// ── Analog joystick (touch) ────────────────────────────────────
-// A circular base + draggable knob replaces the old 4-button D-pad.
-// The normalised knob offset maps to the same Arrow key flags that
-// car.js already reads — no physics changes required.
-;(function () {
-  const base = document.getElementById("joy-base");
-  const knob = document.getElementById("joy-knob");
-  if (!base || !knob) return;
-
-  const RADIUS   = 39;    // max px knob can travel from centre (base r=65, knob r=26)
-  const DEADZONE = 0.22;  // normalised threshold before input registers
-
-  let active  = false;
-  let originX = 0;
-  let originY = 0;
-
-  function applyKnob(nx, ny) {
-    // nx, ny normalised [-1, 1]
-    const px = nx * RADIUS;
-    const py = ny * RADIUS;
-    // knob is centred via translate(-50%,-50%); additional offset stacked on top
-    knob.style.transform = `translate(calc(-50% + ${px}px), calc(-50% + ${py}px))`;
-
-    const mag = Math.hypot(nx, ny);
-
-    // Send high-res vector data to car.js instead of discrete Arrow keys
-    joyInput.nx = nx;
-    joyInput.ny = ny;
-    joyInput.mag = mag;
-    joyInput.active = true;
-
-    // Glow base ring when actively steering
-    base.classList.toggle("moving", mag > DEADZONE);
+// Keyboard (discrete presses)
+window.addEventListener("keydown", (e) => {
+  if (e.repeat) return; // Prevent continuous firing if key held
+  if (e.code === "ArrowLeft" || e.code === "KeyA") {
+    goToNode(-1);
+  } else if (e.code === "ArrowRight" || e.code === "KeyD") {
+    goToNode(1);
   }
+});
 
-  function onStart(e) {
-    e.preventDefault();
-    active = true;
-    knob.classList.add("active");
-    const pt = e.touches ? e.touches[0] : e;
-    const r  = base.getBoundingClientRect();
-    originX  = r.left + r.width  / 2;
-    originY  = r.top  + r.height / 2;
-    onMove(e);
+// Mobile / Mouse tap on left/right screen halves
+window.addEventListener("pointerdown", (e) => {
+  // Ignore clicks inside the panel or UI
+  if (e.target.closest('#panel') || e.target.closest('#controls')) return;
+  
+  if (e.clientX < window.innerWidth / 2) {
+    goToNode(-1);
+  } else {
+    goToNode(1);
   }
-
-  function onMove(e) {
-    if (!active) return;
-    e.preventDefault();
-    const pt  = e.touches ? e.touches[0] : e;
-    const dx  = pt.clientX - originX;
-    const dy  = pt.clientY - originY;
-    const len = Math.hypot(dx, dy);
-    // Clamp within radius
-    const scale = len > RADIUS ? RADIUS / len : 1;
-    applyKnob((dx * scale) / RADIUS, (dy * scale) / RADIUS);
-  }
-
-  function onEnd(e) {
-    if (!active) return;
-    e.preventDefault();
-    active = false;
-    knob.classList.remove("active");
-    // Spring-reset — CSS transition on #joy-knob animates this
-    knob.style.transform = "translate(-50%, -50%)";
-    
-    // Clear analog input
-    joyInput.active = false;
-    joyInput.nx = 0;
-    joyInput.ny = 0;
-    joyInput.mag = 0;
-    
-    base.classList.remove("moving");
-  }
-
-  // Touch — primary mobile path
-  base.addEventListener("touchstart",  onStart, { passive: false });
-  base.addEventListener("touchmove",   onMove,  { passive: false });
-  base.addEventListener("touchend",    onEnd,   { passive: false });
-  base.addEventListener("touchcancel", onEnd,   { passive: false });
-
-  // Mouse fallback (useful in DevTools mobile simulation)
-  base.addEventListener("mousedown",    onStart);
-  window.addEventListener("mousemove",  onMove);
-  window.addEventListener("mouseup",    onEnd);
-})();
+});
 
 // ── Camera follow state ───────────────────────────────────────
 // Camera lerps toward a target offset above the car
@@ -127,7 +70,7 @@ function loop() {
   const delta = Math.min(clock.getDelta(), 0.05);   // cap delta at 50 ms
 
   // 1. Move car
-  updateCar(keys, delta);
+  updateCar(delta);
 
   // 2. Ripple animations
   updateRipples(delta);
