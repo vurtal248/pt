@@ -153,4 +153,4 @@ function updateRipples(delta) {
   });
 }
 
-export { buildNodes, getNearestNode, pulseNode, updateRipples };
+export { buildNodes, getNearestNode, pulseNode, updateRipples, nodePositions };
