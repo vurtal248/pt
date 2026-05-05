@@ -8,21 +8,23 @@ import * as THREE from "https://unpkg.com/three@0.128.0/build/three.module.js";
 import { scene } from "./scene.js";
 
 // ── Tuning constants ─────────────────────────────────────────
-const ACCEL = 80.0;   // units/s²
-const MAX_SPEED = 80.0;   // units/s
-const FRICTION = 0.88;  // velocity multiplier per frame (damping)
-const STEER_RATE = 25;   // rad/s at full speed
-const WORLD_BOUND = 13.5;  // ±world boundary (car turns back at edge)
+const MOVE_DURATION = 1.2;  // seconds to travel to next node
+const TURN_SPEED = 12.0;    // rotation responsiveness
 
 // ── State ─────────────────────────────────────────────────────
-let velocity = 0;          // signed scalar (forward+)
-let heading = 0;          // radians (Y-axis rotation)
 const carPosition = new THREE.Vector3(0, 0, 0);
+let heading = 0;          // radians (Y-axis rotation)
 
-// ── Joystick input (written by main.js) ───────────────────────
-// When active = true, updateCar uses direct heading+magnitude mode
-// instead of the Arrow-key arcade steering mode.
-const joyInput = { active: false, nx: 0, ny: 0, mag: 0 };
+// ── Pathing State ─────────────────────────────────────────────
+const startPos = new THREE.Vector3();
+const targetPos = new THREE.Vector3();
+let isMoving = false;
+let moveProgress = 0;
+
+// Easing function
+function easeInOutCubic(x) {
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
 
 // ── Mesh construction ─────────────────────────────────────────
 const carGroup = new THREE.Group();
@@ -103,64 +105,65 @@ carGroup.add(headlightLight);
 
 scene.add(carGroup);
 
+// ── API ───────────────────────────────────────────────────────
+
+function initCar(pos) {
+  carPosition.copy(pos);
+  startPos.copy(pos);
+  targetPos.copy(pos);
+  heading = 0;
+  
+  carGroup.position.set(carPosition.x, 0, carPosition.z);
+  carGroup.rotation.y = heading;
+}
+
+function driveTo(pos) {
+  startPos.copy(carPosition); // ease from current position (handles mid-transit clicks)
+  targetPos.copy(pos);
+  moveProgress = 0;
+  isMoving = true;
+}
+
 // ── Update (called each frame) ────────────────────────────────
-const _moveDir = new THREE.Vector3();
 
-function updateCar(keys, delta) {
-  if (joyInput.active && joyInput.mag > 0.08) {
-    // ── Joystick: direct-direction mode ──────────────────────
-    // Camera sits at carZ+10, so screen-up = world -Z = heading PI.
-    // atan2(joyX, joyY) maps joystick screen coords to world heading:
-    //   stick up  (joyY=-1) → atan2(0,-1) = PI  = -Z ✓
-    //   stick right(joyX=1) → atan2(1, 0) = PI/2 = +X ✓
-    const targetHeading = Math.atan2(joyInput.nx, joyInput.ny);
+function updateCar(delta) {
+  if (isMoving) {
+    moveProgress += delta / MOVE_DURATION;
+    if (moveProgress >= 1) {
+      moveProgress = 1;
+      isMoving = false;
+    }
 
-    // Shortest-path heading lerp — snappy but not jarring
-    let diff = targetHeading - heading;
-    while (diff > Math.PI) diff -= 2 * Math.PI;
-    while (diff < -Math.PI) diff += 2 * Math.PI;
-    heading += diff * Math.min(1, 10 * delta);
+    const t = easeInOutCubic(moveProgress);
+    const oldX = carPosition.x;
+    const oldZ = carPosition.z;
 
-    // Speed proportional to stick displacement
-    velocity += ACCEL * joyInput.mag * delta;
+    carPosition.lerpVectors(startPos, targetPos, t);
 
-  } else if (!joyInput.active) {
-    // ── Keyboard: original tank-turn arcade steering ─────────
-    const speedFactor = Math.abs(velocity) / MAX_SPEED;
-    const steerAmount = STEER_RATE * speedFactor * delta;
+    // Calculate heading based on displacement this frame
+    const dx = carPosition.x - oldX;
+    const dz = carPosition.z - oldZ;
+    const dist = Math.hypot(dx, dz);
 
-    if (keys["ArrowLeft"] || keys["KeyA"]) heading += steerAmount;
-    if (keys["ArrowRight"] || keys["KeyD"]) heading -= steerAmount;
+    if (dist > 0.0001) {
+      const targetHeading = Math.atan2(dx, dz);
+      // Shortest-path heading lerp
+      let diff = targetHeading - heading;
+      while (diff > Math.PI) diff -= 2 * Math.PI;
+      while (diff < -Math.PI) diff += 2 * Math.PI;
+      heading += diff * Math.min(1, TURN_SPEED * delta);
+    }
 
-    if (keys["ArrowUp"] || keys["KeyW"]) velocity += ACCEL * delta;
-    if (keys["ArrowDown"] || keys["KeyS"]) velocity -= ACCEL * delta;
+    // Wheel spin based on distance traveled
+    const spinAngle = (dist / delta) * delta * 5;
+    wheels.forEach((w) => {
+      w.children[0].rotation.x += spinAngle;
+    });
   }
-
-  // ── Friction / coast ─────────────────────────────────────
-  velocity *= Math.pow(FRICTION, delta * 60);   // framerate-independent
-
-  // Clamp speed
-  velocity = Math.max(-MAX_SPEED * 0.5, Math.min(MAX_SPEED, velocity));
-
-  // ── Move ─────────────────────────────────────────────────
-  _moveDir.set(Math.sin(heading), 0, Math.cos(heading));
-  const move = velocity * delta;
-  const nx = carPosition.x + _moveDir.x * move;
-  const nz = carPosition.z + _moveDir.z * move;
-
-  // World boundary clamping — gentle bounce
-  carPosition.x = Math.max(-WORLD_BOUND, Math.min(WORLD_BOUND, nx));
-  carPosition.z = Math.max(-WORLD_BOUND, Math.min(WORLD_BOUND, nz));
-
-  // ── Wheel spin (visual) ───────────────────────────────────
-  const spinAngle = velocity * delta * 5;
-  wheels.forEach((w) => {
-    w.children[0].rotation.x += spinAngle;
-  });
 
   // ── Apply to group ────────────────────────────────────────
   carGroup.position.set(carPosition.x, 0, carPosition.z);
   carGroup.rotation.y = heading;
 }
 
-export { carGroup, carPosition, updateCar, joyInput };
+export { carGroup, carPosition, initCar, driveTo, updateCar };
